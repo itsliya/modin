@@ -44,6 +44,8 @@ def progress_bar_wrapper(f):
     @wraps(f)
     def magic(*args, **kwargs):
         result_parts = f(*args, **kwargs)
+        if isinstance(result_parts, tuple):
+            result_parts = np.array(result_parts[0])
         if ProgressBar.get():
             current_frame = inspect.currentframe()
             function_name = None
@@ -259,3 +261,10 @@ class PandasOnRayFrameManager(RayFrameManager):
         return super(PandasOnRayFrameManager, cls).binary_operation(
             axis, left, func, right
         )
+
+    @classmethod
+    @progress_bar_wrapper
+    def groupby_reduce(
+        cls, axis, partitions, by, map_func, reduce_func, apply_indices=None
+    ):
+        return super(PandasOnRayFrameManager, cls).groupby_reduce(axis, partitions, by, map_func, reduce_func, apply_indices)

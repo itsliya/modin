@@ -21,6 +21,7 @@ from typing import Union, Sequence, Optional, Tuple
 import pandas
 
 from modin.config import NPartitions
+from modin.engines.ray.pandas_on_ray.frame.partition_manager import progress_bar_wrapper
 
 ColumnNamesTypes = Tuple[Union[pandas.Index, pandas.MultiIndex, pandas.Int64Index]]
 
@@ -353,6 +354,7 @@ class TextFileDispatcher(FileDispatcher):
         return column_widths, num_splits
 
     @classmethod
+    @progress_bar_wrapper
     def _launch_tasks(cls, splits: list, **partition_kwargs) -> Tuple[list, list, list]:
         """
         Launch tasks to read partitions.

@@ -30,6 +30,7 @@ IndexColType = Union[int, str, bool, Sequence[int], Sequence[str], None]
 
 
 class CSVDispatcher(TextFileDispatcher):
+
     @classmethod
     def _read(cls, filepath_or_buffer, **kwargs):
         filepath_or_buffer_md = (
