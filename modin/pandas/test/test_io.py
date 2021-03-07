@@ -292,6 +292,13 @@ class TestCsv:
             skip_blank_lines=skip_blank_lines,
         )
 
+    @pytest.mark.parametrize("usecols", [lambda col_name: col_name in ["a", "b", "e"]])
+    def test_from_csv_with_callable_usecols(self, usecols):
+        fname = "modin/pandas/test/data/test_usecols.csv"
+        pandas_df = pandas.read_csv(fname, usecols=usecols)
+        modin_df = pd.read_csv(fname, usecols=usecols)
+        df_equals(modin_df, pandas_df)
+
     # General Parsing Configuration
     @pytest.mark.parametrize("dtype", [None, True])
     @pytest.mark.parametrize("engine", [None, "python", "c"])
@@ -1167,6 +1174,28 @@ class TestParquet:
         modin_df_s3 = pd.read_parquet(dataset_url)
         df_equals(pandas_df, modin_df_s3)
 
+    def test_read_parquet_without_metadata(self):
+        """Test that Modin can read parquet files not written by pandas."""
+        from pyarrow import csv
+        from pyarrow import parquet
+
+        parquet_fname = get_unique_filename(extension="parquet")
+        csv_fname = get_unique_filename(extension="parquet")
+        pandas_df = pandas.DataFrame(
+            {
+                "idx": np.random.randint(0, 100_000, size=2000),
+                "A": np.random.randint(0, 10, size=2000),
+                "B": ["a", "b"] * 1000,
+                "C": ["c"] * 2000,
+            }
+        )
+        pandas_df.to_csv(csv_fname, index=False)
+        # read into pyarrow table and write it to a parquet file
+        t = csv.read_csv(csv_fname)
+        parquet.write_table(t, parquet_fname)
+
+        df_equals(pd.read_parquet(parquet_fname), pandas.read_parquet(parquet_fname))
+
     def test_to_parquet(self):
         modin_df, pandas_df = create_test_dfs(TEST_DATA)
         eval_to_file(
@@ -1175,6 +1204,21 @@ class TestParquet:
             fn="to_parquet",
             extension="parquet",
         )
+
+    def test_read_parquet_2462(self):
+        test_df = pd.DataFrame(
+            {
+                "col1": [["ad_1", "ad_2"], ["ad_3"]],
+            }
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = f"{directory}/data"
+            os.makedirs(path)
+            test_df.to_parquet(path + "/part-00000.parquet")
+            read_df = pd.read_parquet(path)
+
+            df_equals(test_df, read_df)
 
 
 class TestJson:
