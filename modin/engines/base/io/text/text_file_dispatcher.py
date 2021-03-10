@@ -45,6 +45,7 @@ class TextFileDispatcher(FileDispatcher):
         return filepath_or_buffer
 
     @classmethod
+    @progress_bar_wrapper
     def build_partition(cls, partition_ids, row_lengths, column_widths):
         return np.array(
             [
@@ -354,7 +355,6 @@ class TextFileDispatcher(FileDispatcher):
         return column_widths, num_splits
 
     @classmethod
-    @progress_bar_wrapper
     def _launch_tasks(cls, splits: list, **partition_kwargs) -> Tuple[list, list, list]:
         """
         Launch tasks to read partitions.

@@ -316,14 +316,14 @@ class CSVDispatcher(TextFileDispatcher):
         new_query_compiler:
                 New query compiler, created from `new_frame`.
         """
+        # Compose modin partitions from `partition_ids`
+        partition_ids = cls.build_partition(partition_ids, [None] * len(partition_ids[0]), [None] * len(partition_ids))
         new_index, row_lengths = cls._define_index(index_ids, index_col_md, index_name)
         # Compute dtypes by getting collecting and combining all of the partitions. The
         # reported dtypes from differing rows can be different based on the inference in
         # the limited data seen by each worker. We use pandas to compute the exact dtype
         # over the whole column for each column. The index is set below.
         dtypes = cls.get_dtypes(dtypes_ids) if len(dtypes_ids) > 0 else None
-        # Compose modin partitions from `partition_ids`
-        partition_ids = cls.build_partition(partition_ids, row_lengths, column_widths)
         column_names, column_widths = cls._define_column_names(
             column_names, kwargs.get("parse_dates", False), column_widths
         )

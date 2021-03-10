@@ -44,8 +44,6 @@ def progress_bar_wrapper(f):
     @wraps(f)
     def magic(*args, **kwargs):
         result_parts = f(*args, **kwargs)
-        if isinstance(result_parts, tuple):
-            result_parts = np.array(result_parts[0])
         if ProgressBar.get():
             current_frame = inspect.currentframe()
             function_name = None
